@@ -40,21 +40,6 @@ def get_non_missing(df):
     df = df.dropna(axis=0, how='any')
     return df
 
-#스케일링 함수화 (테스터 학습하지 않도록 주의!)
-def get_sc (df):
-    #정규화
-    mn_sc = MinMaxScaler() #모델생성
-    mn_sc.fit(X_train[['EstimatedSalary','Balance']]) # 학습
-
-    # 표준화 -나이/신용점수
-    sd_sc = StandardScaler() #모델생성
-    sd_sc.fit(X_train[['Age','CreditScore']]) # 학습
-
-    df[['sal_mn_sc','bal_mn_sc']] = mn_sc.transform(df[['EstimatedSalary','Balance']]) # 학습
-    df[['age_sd_sc','score_sd_sc']] = sd_sc.transform(df[['Age','CreditScore']]) # 학습
-    
-    return df
-
 #인코딩 함수
 def get_encoding(df):
 
@@ -67,14 +52,17 @@ def get_encoding(df):
     oe.fit(df[['Geography']])
     geo_csr = oe.transform(df[['Geography']])
 
+    # CSR 데이터 데이터프레임으로 만들기
     csr_df = pd.DataFrame(geo_csr.toarray(), columns = oe.get_feature_names_out())
 
+    #기존 데이터에 컬럼으로 추가하기 (axis = 1) 열 단위 
     df = df.reset_index(drop=True)  # df 인덱스 초기화
     csr_df = csr_df.reset_index(drop=True)  # csr_df 인덱스 초기화
 
     df = pd.concat([df,csr_df],axis=1)
     return df
 
+#인코딩 테이블 저장
 X_train = get_encoding(X_train)
 X_train.columns
 
@@ -87,13 +75,11 @@ def get_model(df,y_true):
 #최종 학습모델 저장 
 model_output = get_model(X_train,y_train)
 
-
 #테스터 전처리
 X_test2 = get_unique(X_test) #중복
 X_test2 = get_non_missing(X_test2) #결측
 y_test = y_test.loc[X_test2.index]  # 결측치 삭제된 X_test2와 같은 인덱스 유지 ->추가 학습 필요요
 X_test2 = get_encoding(X_test2) #인코딩
-X_test2 = get_sc(X_test2) #스케일링
 X_test2 = X_test2[X_train.columns]
 
 # train / test 예측 및 평가 

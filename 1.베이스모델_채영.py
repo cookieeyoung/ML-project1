@@ -36,15 +36,19 @@ def get_non_missing(df):
     df = df.dropna(axis=0, how='any')
     return df
 
-#스케일링 함수화
+#스케일링 함수화 (테스터 학습하지 않도록 주의!)
 def get_sc (df):
-    # 정규화 - 연봉/잔액
-    mn_sc = MinMaxScaler()
-    df[['sal_mn_sc','bal_mn_sc']] = mn_sc.fit_transform(df[['EstimatedSalary','Balance']])
+    #정규화
+    mn_sc = MinMaxScaler() #모델생성
+    mn_sc.fit(X_train[['EstimatedSalary','Balance']]) # 학습
 
     # 표준화 -나이/신용점수
-    sd_sc = StandardScaler()
-    df[['age_sd_sc','score_sd_sc']] = sd_sc.fit_transform(df[['Age','CreditScore']]) 
+    sd_sc = StandardScaler() #모델생성
+    sd_sc.fit(X_train[['Age','CreditScore']]) # 학습
+
+    df[['sal_mn_sc','bal_mn_sc']] = mn_sc.transform(df[['EstimatedSalary','Balance']]) # 학습
+    df[['age_sd_sc','score_sd_sc']] = sd_sc.transform(df[['Age','CreditScore']]) # 학습
+    
     return df
 
 #인코딩 함수

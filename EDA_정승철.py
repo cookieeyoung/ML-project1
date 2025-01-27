@@ -25,7 +25,7 @@ nan_data = data.dropna()
 # 중복 값 행 검색 및 행 삭제
 data[data.duplicated()]
 
-new_data = nan_data[~data.duplicated()]
+new_data = nan_data[~nan_data.duplicated()]
 
 new_data
 new_data.describe()

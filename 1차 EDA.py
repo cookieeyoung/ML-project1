@@ -15,3 +15,4 @@ data = pd.read_csv('Churn_Modelling.csv',index_col=0)
 data
 
 # 연동완료(정승철)
+# 연동완료(김민주)

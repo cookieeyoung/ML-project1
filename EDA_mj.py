@@ -84,6 +84,7 @@ sns.heatmap(df.isnull(), cbar=False, cmap='viridis')
 plt.title('Missing Value Heatmap')
 plt.show()
 
+
 # 범주형 변수 인코딩
 # 범주형 데이터 레이블 인코딩
 category_vars = ['Gender', 'HasCrCard', 'IsActiveMember']

@@ -73,3 +73,30 @@ print("Area under precision (AUC) Recall:", average_precision_score(y_test, y_pr
 
 #confusion Matrix
 confusion_matrix(y_test, y_pred)
+
+# 하이퍼 파라미터 튜닝 : GridSearch 사용 => Oversampling 결과 대비 recall이 소폭 상승(0.85)
+from sklearn.model_selection import GridSearchCV
+
+parameters = {'max_depth':[1,2,3,4], 'min_samples_split':[2,3,4]}
+
+grid_search_model = GridSearchCV(
+    estimator=model_xg,
+    param_grid=parameters,
+    cv=3,
+    refit=True
+)
+grid_search_model.fit(X_train, y_train)
+
+score_df = pd.DataFrame(grid_search_model.cv_results_)
+score_df
+
+print('GridSearchCV 최적 파라미터:', grid_search_model.best_params_)
+print('GridSearchCV 최고 정확도: {0:.4f}'.format(grid_search_model.best_score_))
+
+# GridSearchCV의 refit으로 이미 학습이 된 estimator 반환
+estimator = grid_search_model.best_estimator_
+
+# GridSearchCV의 best_estimator_는 이미 최적 하이퍼 파라미터로 학습이 됨
+pred = estimator.predict(X_test)
+print('테스트 데이터 세트 정확도: {0:.4f}'.format(accuracy_score(y_test, pred)))
+print('테스트 데이터 세트 recall: {0:.4f}'.format(recall_score(y_test, pred)))

@@ -1,0 +1,75 @@
+import pandas as pd
+import seaborn as sns
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score, average_precision_score, confusion_matrix
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
+from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score, f1_score
+import shap
+from imblearn.over_sampling import SMOTE
+
+# 불필요한 경고문 생략(선택)
+import warnings
+warnings.filterwarnings('ignore')
+
+# 모든 컬럼 출력설정(선택)
+pd.set_option('display.max_columns', None)
+
+# 데이터 로드
+data = pd.read_csv('Churn_Modelling.csv',index_col=0)
+data
+
+# 결측치 확인 및 제거(4개 행 제거)
+data.isnull().sum()
+nan_data = data.dropna()
+
+# 중복 값 행 검색 및 행 삭제
+nan_data[nan_data.duplicated()]
+
+new_data = nan_data[~nan_data.duplicated()]
+
+new_data.describe()
+
+# 성별, 국가 범주형 변수에서 수치형 변수로 인코딩 시작(France = 0, Germany = 1, Spain = 2 / Female = 0, male = 1), Over Sampling 용이하게 하기 위함
+le = LabelEncoder()
+new_data['Gender'] = le.fit_transform(new_data["Gender"])
+new_data['Geography'] = le.fit_transform(new_data["Geography"])
+
+int_data = new_data.drop(columns=['CustomerId', 'Surname'])
+
+X = int_data.drop("Exited", axis=1)
+y_true = int_data[['Exited']]
+
+# 데이터 엔지니어링(결측치 제거 후 전체 데이터셋 기준), 30:70 으로 훈련 셋과 테스트셋 분할
+mms = MinMaxScaler()
+
+target_features = ["CreditScore", "Age", "Balance", "EstimatedSalary"]
+
+scaled_X = pd.DataFrame(data = X)
+scaled_X[target_features] = mms.fit_transform(X[target_features])
+
+
+X_train, X_test, y_train, y_test = train_test_split(X,y_true, test_size = 0.3, random_state= 42)
+
+# Over Sampling 수행
+X = scaled_X
+sm = SMOTE(random_state=42)
+X_res, y_res = sm.fit_resample(X, y_true)
+X_train, X_test, y_train, y_test = train_test_split(X_res, y_res, test_size= 0.3, random_state=42)
+
+model_xg = XGBClassifier(random_state = 42)
+model_xg.fit(X_train, y_train)
+
+y_pred = model_xg.predict(X_test)
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Precision:", precision_score(y_test, y_pred))
+print("Recall:", recall_score(y_test, y_pred))
+print("F1:", f1_score(y_test, y_pred))
+print("Area under precision (AUC) Recall:", average_precision_score(y_test, y_pred))
+
+#confusion Matrix
+confusion_matrix(y_test, y_pred)

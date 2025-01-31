@@ -1,0 +1,109 @@
+import pandas as pd
+import seaborn as sns
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score, average_precision_score, confusion_matrix
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
+from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score, f1_score
+import shap
+from imblearn.over_sampling import SMOTE
+
+# 불필요한 경고문 생략(선택)
+import warnings
+warnings.filterwarnings('ignore')
+
+# 모든 컬럼 출력설정(선택)
+pd.set_option('display.max_columns', None)
+
+# 데이터 로드
+data = pd.read_csv('Churn_Modelling.csv',index_col=0)
+data
+
+# 결측치 확인 및 제거(4개 행 제거)
+data.isnull().sum()
+nan_data = data.dropna()
+
+# 중복 값 행 검색 및 행 삭제
+nan_data[nan_data.duplicated()]
+
+new_data = nan_data[~nan_data.duplicated()]
+
+new_data.describe()
+
+# 성별, 국가 범주형 변수에서 수치형 변수로 인코딩 시작(Female = 0, male = 1), Over Sampling 용이하게 하기 위함
+le = LabelEncoder()
+new_data['Gender'] = le.fit_transform(new_data["Gender"])
+
+geography_dummies = pd.get_dummies(new_data['Geography'], prefix='Geography')
+new_data = pd.concat([new_data, geography_dummies], axis=1)
+
+for column in new_data.columns:
+    if new_data[column].dtype == 'bool':
+        new_data[column] = new_data[column].astype(int)
+
+
+int_data = new_data.drop(columns=['CustomerId', 'Surname'])
+
+X = int_data.drop("Exited", axis=1)
+y_true = int_data['Exited']
+
+# 데이터 엔지니어링(결측치 제거 후 전체 데이터셋 기준), 30:70 으로 훈련 셋과 테스트셋 분할
+mms = MinMaxScaler()
+
+target_features = ["CreditScore", "Age", "Balance", "EstimatedSalary"]
+
+scaled_X = pd.DataFrame(data = X)
+scaled_X[target_features] = mms.fit_transform(X[target_features])
+
+
+X_train, X_test, y_train, y_test = train_test_split(X,y_true, test_size = 0.3, random_state= 42)
+
+# Over Sampling 수행
+X = scaled_X
+sm = SMOTE(random_state=42)
+X_res, y_res = sm.fit_resample(X_train, y_train)
+
+
+model_xg = XGBClassifier(random_state = 42)
+model_xg.fit(X_train, y_train)
+
+y_pred = model_xg.predict(X_test)
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Precision:", precision_score(y_test, y_pred))
+print("Recall:", recall_score(y_test, y_pred))
+print("F1:", f1_score(y_test, y_pred))
+print("Area under precision (AUC) Recall:", average_precision_score(y_test, y_pred))
+
+#confusion Matrix
+confusion_matrix(y_test, y_pred)
+
+# 하이퍼 파라미터 튜닝 : GridSearch 사용 => Oversampling 결과 대비 recall이 소폭 상승(0.85)
+from sklearn.model_selection import GridSearchCV
+
+parameters = {'max_depth':[1,2,3,4], 'min_samples_split':[2,3,4]}
+
+grid_search_model = GridSearchCV(
+    estimator=model_xg,
+    param_grid=parameters,
+    cv=3,
+    refit=True
+)
+grid_search_model.fit(X_train, y_train)
+
+score_df = pd.DataFrame(grid_search_model.cv_results_)
+score_df
+
+print('GridSearchCV 최적 파라미터:', grid_search_model.best_params_)
+print('GridSearchCV 최고 정확도: {0:.4f}'.format(grid_search_model.best_score_))
+
+# GridSearchCV의 refit으로 이미 학습이 된 estimator 반환
+estimator = grid_search_model.best_estimator_
+
+# GridSearchCV의 best_estimator_는 이미 최적 하이퍼 파라미터로 학습이 됨
+pred = estimator.predict(X_test)
+print('테스트 데이터 세트 정확도: {0:.4f}'.format(accuracy_score(y_test, pred)))
+print('테스트 데이터 세트 recall: {0:.4f}'.format(recall_score(y_test, pred)))

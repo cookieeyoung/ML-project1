@@ -34,15 +34,22 @@ new_data = nan_data[~nan_data.duplicated()]
 
 new_data.describe()
 
-# 성별, 국가 범주형 변수에서 수치형 변수로 인코딩 시작(France = 0, Germany = 1, Spain = 2 / Female = 0, male = 1), Over Sampling 용이하게 하기 위함
+# 성별, 국가 범주형 변수에서 수치형 변수로 인코딩 시작(Female = 0, male = 1), Over Sampling 용이하게 하기 위함
 le = LabelEncoder()
 new_data['Gender'] = le.fit_transform(new_data["Gender"])
-new_data['Geography'] = le.fit_transform(new_data["Geography"])
+
+geography_dummies = pd.get_dummies(new_data['Geography'], prefix='Geography')
+new_data = pd.concat([new_data, geography_dummies], axis=1)
+
+for column in new_data.columns:
+    if new_data[column].dtype == 'bool':
+        new_data[column] = new_data[column].astype(int)
+
 
 int_data = new_data.drop(columns=['CustomerId', 'Surname'])
 
 X = int_data.drop("Exited", axis=1)
-y_true = int_data[['Exited']]
+y_true = int_data['Exited']
 
 # 데이터 엔지니어링(결측치 제거 후 전체 데이터셋 기준), 30:70 으로 훈련 셋과 테스트셋 분할
 mms = MinMaxScaler()

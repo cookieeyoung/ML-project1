@@ -95,7 +95,11 @@ param_grids = {
         }
     },
     'Decision Tree': {
-        'model': DecisionTreeClassifier(random_state=42),
+        'model': DecisionTreeClassifier(random_state=42,
+        max_depth=7,
+        min_samples_split=38,
+        min_samples_leaf=15,
+        criterion='gini'),
         'params': {
             'max_depth': [ ],
             'min_samples_split': [ ],
@@ -112,7 +116,7 @@ param_grids = {
         }
     },
     'KNN': {
-        'model': KNeighborsClassifier(),
+        'model': KNeighborsClassifier(metric='manhattan', n_neighbors=1, weights='uniform'),
         'params': {
             'n_neighbors': [ ],
             'weights': [ ],
@@ -120,7 +124,7 @@ param_grids = {
         }
     },
     'SVM': {
-        'model': SVC(random_state=42),
+        'model': SVC(random_state=42, C=1000, gamma='auto', kernel='rbf'),
         'params': {
             'C': [ ],
             'kernel': [ ],
@@ -144,7 +148,18 @@ param_grids = {
         }
     },
     'LightGBM': {
-        'model': LGBMClassifier(random_state=42),
+        'model': LGBMClassifier(random_state=42,
+        n_estimators=730,
+        max_depth=13,
+        learning_rate=0.01435834368105083,
+        min_child_samples=106,
+        subsample=0.841433063340509,
+        colsample_bytree=0.9187535635349607,
+        num_leaves=9,
+        min_child_weight=2.6604198671232178,
+        reg_alpha=5.834179034203318,
+        reg_lambda=1.4776579289686835,
+        verbose=-1),
         'params': {
             'n_estimators': [ ],
             'max_depth': [ ],

@@ -1,0 +1,18 @@
+param_grids = {
+    "LogisticRegression": {
+        "model": LogisticRegression(),
+        "params": {
+            "C": [0.01, 0.1, 1, 10],
+            "penalty": ["l1", "l2"],
+            "solver": ["liblinear"]
+        }
+    },
+    "XGBoost": {
+        "model": XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42),
+        "params": {
+            "n_estimators": [50, 100, 200],
+            "max_depth": [3, 5, 7],
+            "learning_rate": [0.01, 0.1, 0.2]
+        }
+    }
+}

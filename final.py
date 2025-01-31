@@ -154,10 +154,10 @@ param_grids = {
     'CatBoost': {
         'model': CatBoostClassifier(random_state=42, verbose=False),
         'params': {
-            'iterations': [ ],
-            'depth': [ ],
-            'learning_rate': [ ],
-            'l2_leaf_reg': [ ]
+            'learning_rate': [0.087],  
+            'depth': [8],  
+            'n_estimators': [145],
+            'l2_leaf_reg': [0.07]
         }
     },
 }

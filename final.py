@@ -105,10 +105,10 @@ param_grids = {
     'Random Forest': {
         'model': RandomForestClassifier(random_state=42),
         'params': {
-            'n_estimators': [ ],
-            'max_depth': [ ],
-            'min_samples_split': [ ],
-            'min_samples_leaf': [ ]
+            'n_estimators': [100],
+            'max_depth': [20],
+            'min_samples_split': [2],
+            'min_samples_leaf': [1]
         }
     },
     'KNN': {
@@ -130,9 +130,8 @@ param_grids = {
     'Gradient Boosting': {
         'model': GradientBoostingClassifier(random_state=42),
         'params': {
-            'n_estimators': [ ],
-            'learning_rate': [ ],
-            'max_depth': [ ]
+            'n_estimators': [100],
+            'learning_rate': [0.1],
         }
     },
     'XGBoost': {

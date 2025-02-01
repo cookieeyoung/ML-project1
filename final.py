@@ -166,12 +166,12 @@ param_grids = {
         }
     },
     'CatBoost': {
-        'model': CatBoostClassifier(random_state=42, verbose=False),
+        'model': CatBoostClassifier(random_state=42, verbose=False,class_weights={0:0.35,1:0.65}),
         'params': {
-            'learning_rate': [0.087],  
+            'learning_rate': [0.02678152407579277],  
             'depth': [8],  
-            'n_estimators': [145],
-            'l2_leaf_reg': [0.07]
+            'n_estimators': [111],
+            'l2_leaf_reg': [0.0008386712970316092]
         }
     },
 }

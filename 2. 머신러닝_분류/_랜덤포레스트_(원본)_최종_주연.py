@@ -83,12 +83,17 @@ def objective(trial):
         if precision >= 0.5 and recall > best_recall:
             best_recall = recall
             best_threshold = threshold
+            
+    trial.set_user_attr("best_threshold", best_threshold)
 
     return best_recall
 
 # Optuna 실행
 study = optuna.create_study(direction="maximize")
 study.optimize(objective, n_trials=20, n_jobs=-1)
+
+#최적 threshold 값 가져오기
+best_threshold = study.best_trial.user_attrs["best_threshold"]
 
 # 최적 모델 학습
 best_params = study.best_trial.params

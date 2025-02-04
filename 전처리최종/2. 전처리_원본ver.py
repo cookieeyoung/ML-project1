@@ -25,7 +25,18 @@ from imblearn.over_sampling import SMOTE
 import warnings
 warnings.filterwarnings('ignore')
 pd.set_option('display.max_columns', None)
-data = pd.read_csv('train.csv')
+df = pd.read_csv('train.csv')
+print('원본 데이터 :',df.shape)
+
+nan_data = df.drop(columns=['id','CustomerId'])
+data = nan_data[~nan_data.duplicated()]
+print('중복 처리 :',data.shape)
+
+#check
+X = data.drop(columns=['Surname','Exited'],axis=1).reset_index(drop=True)
+y_true = data['Exited'].reset_index(drop=True)
+print('전처리 완료:',X.shape,y_true.shape)
+print('----------------------------')
 
 #encoding : gender-label ( Female = 0, male = 1) /  geography-onehot
 le = LabelEncoder()

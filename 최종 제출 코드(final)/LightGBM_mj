@@ -1,0 +1,87 @@
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from lightgbm import LGBMClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix
+from imblearn.over_sampling import SMOTE
+
+# 1. 데이터 로드 및 전처리
+data = pd.read_csv('Churn_Modelling_original.csv')
+data_clean = data.dropna()
+
+# 인코딩
+le = LabelEncoder()
+data_clean['Gender'] = le.fit_transform(data_clean["Gender"])
+
+oe = OneHotEncoder()
+oe.fit(data_clean[['Geography']])
+geo_csr = oe.transform(data_clean[['Geography']])
+csr_df = pd.DataFrame(geo_csr.toarray(), columns=oe.get_feature_names_out())
+
+# 데이터프레임 병합 
+df = data_clean.reset_index(drop=True)
+csr_df = csr_df.reset_index(drop=True)
+inco_df = pd.concat([df, csr_df], axis=1)
+
+# 필요없는 컬럼 제거
+int_data = inco_df.drop(columns=['CustomerId', 'Surname', 'Geography'])
+X = int_data.drop("Exited", axis=1)
+y_true = int_data['Exited']
+
+# 2. 데이터 분리
+X_train, X_test, y_train, y_test = train_test_split(X, y_true,
+                                                   stratify=y_true,
+                                                   test_size=0.2,
+                                                   random_state=42)
+
+# 3. SMOTE 적용
+sm = SMOTE(random_state=42)
+X_train_res, y_train_res = sm.fit_resample(X_train, y_train)
+
+# 4. 모델 학습 (최적화된 파라미터 적용)
+lgbm = LGBMClassifier(
+   n_estimators=1000,
+   max_depth=10,
+   learning_rate=0.01,
+   num_leaves=50,
+   min_child_samples=30,
+   subsample=0.8,
+   colsample_bytree=0.8,
+   scale_pos_weight=4.0,
+   reg_alpha=1e-5,
+   reg_lambda=1e-5,
+   random_state=42,
+   boosting_type='gbdt',
+   objective='binary'
+)
+
+lgbm.fit(X_train_res, y_train_res)
+
+# 5. 예측 및 threshold 적용
+def predict_with_threshold(model, X, threshold=0.69):  # 이전 최적 threshold 적용
+   y_pred_proba = model.predict_proba(X)[:, 1]
+   return (y_pred_proba >= threshold).astype(int)
+
+# 6. 모델 평가
+def evaluate_model(y_true, y_pred, model_name, threshold):
+   print(f"\n{model_name} 성능 (threshold={threshold:.3f}):")
+   print(f"Accuracy: {accuracy_score(y_true, y_pred):.4f}")
+   print(f"Precision: {precision_score(y_true, y_pred):.4f}")
+   print(f"Recall: {recall_score(y_true, y_pred):.4f}")
+   print(f"F1 Score: {f1_score(y_true, y_pred):.4f}")
+   print(f"ROC-AUC: {roc_auc_score(y_true, y_pred):.4f}")
+   
+   cm = confusion_matrix(y_true, y_pred)
+   print("\nConfusion Matrix:")
+   print(cm)
+   
+   tn, fp, fn, tp = cm.ravel()
+   print(f"\nSpecificity: {tn/(tn+fp):.4f}")
+   print(f"False Positive Rate: {fp/(fp+tn):.4f}")
+   print(f"False Negative Rate: {fn/(fn+tp):.4f}")
+
+# 7. 최종 예측 및 평가
+threshold = 0.69  # 이전 최적 threshold
+y_pred = predict_with_threshold(lgbm, X_test, threshold)
+evaluate_model(y_test, y_pred, "LightGBM", threshold)

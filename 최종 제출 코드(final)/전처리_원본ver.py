@@ -51,7 +51,7 @@ csr_df = csr_df.reset_index(drop=True)  # csr_df 인덱스 초기화
 inco_df = pd.concat([df,csr_df],axis=1)
 
 #check
-int_data = inco_df.drop(columns=['id','CustomerId', 'Surname','Geography'])
+int_data = inco_df.drop(columns=['Surname','Geography'])
 X = int_data.drop("Exited", axis=1)
 y_true = int_data['Exited']
 print('전처리 완료:',X.shape,y_true.shape)

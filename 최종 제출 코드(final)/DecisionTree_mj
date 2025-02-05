@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, MinMaxScaler
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix
@@ -26,13 +26,19 @@ inco_df = pd.concat([df, csr_df], axis=1)
 
 # 필요없는 컬럼 제거
 int_data = inco_df.drop(columns=['CustomerId', 'Surname', 'Geography'])
+
+# 수치형 변수 스케일링
+numeric_columns = ['CreditScore', 'Age', 'Tenure', 'Balance', 'NumOfProducts', 'EstimatedSalary']
+scaler = MinMaxScaler()
+int_data[numeric_columns] = scaler.fit_transform(int_data[numeric_columns])
+
 X = int_data.drop("Exited", axis=1)
 y_true = int_data['Exited']
 
 # 2. 데이터 분리
-X_train, X_test, y_train, y_test = train_test_split(X, y_true, 
-                                                    stratify=y_true, 
-                                                    test_size=0.2, 
+X_train, X_test, y_train, y_test = train_test_split(X, y_true,
+                                                    stratify=y_true,
+                                                    test_size=0.2,
                                                     random_state=42)
 
 # 3. SMOTE 적용
@@ -48,7 +54,6 @@ dt = DecisionTreeClassifier(
     class_weight={0: 1.0, 1: 8.61},
     random_state=42
 )
-
 dt.fit(X_train_res, y_train_res)
 
 # 5. 예측 및 threshold 적용

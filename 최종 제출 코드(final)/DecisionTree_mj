@@ -19,7 +19,7 @@ oe.fit(data_clean[['Geography']])
 geo_csr = oe.transform(data_clean[['Geography']])
 csr_df = pd.DataFrame(geo_csr.toarray(), columns=oe.get_feature_names_out())
 
-# 데이터프레임
+# 데이터프레임 병합
 df = data_clean.reset_index(drop=True)
 csr_df = csr_df.reset_index(drop=True)
 inco_df = pd.concat([df, csr_df], axis=1)
